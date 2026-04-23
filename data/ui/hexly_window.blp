@@ -1,0 +1,99 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $HexlyWindow: Adw.ApplicationWindow {
+  title: _("Hexly");
+  default-width: 1520;
+  default-height: 920;
+
+  content: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      title-widget: Adw.WindowTitle {
+        title: _("Hexly");
+        subtitle: _("Mifare Classic Tool · PC/SC reader");
+      };
+
+      [start]
+      Button refresh_button {
+        tooltip-text: _("Refresh readers list");
+
+        css-classes: [
+          "flat",
+        ];
+
+        clicked => $on_refresh_readers() swapped;
+
+        child: Image {
+          icon-name: "view-refresh-symbolic";
+          pixel-size: 16;
+        };
+      }
+
+      [end]
+      MenuButton {
+        tooltip-text: _("Application menu");
+        icon-name: "open-menu-symbolic";
+
+        css-classes: [
+          "flat",
+        ];
+      }
+
+      [end]
+      Button {
+        tooltip-text: _("Export dump");
+
+        css-classes: [
+          "flat",
+        ];
+
+        child: Image {
+          icon-name: "document-save-symbolic";
+          pixel-size: 16;
+        };
+      }
+
+      [end]
+      Button {
+        tooltip-text: _("Import dump");
+
+        css-classes: [
+          "flat",
+        ];
+
+        child: Image {
+          icon-name: "document-open-symbolic";
+          pixel-size: 16;
+        };
+      }
+    }
+
+    content: Box {
+      orientation: horizontal;
+      spacing: 16;
+      margin-top: 16;
+      margin-bottom: 16;
+      margin-start: 16;
+      margin-end: 16;
+
+      ScrolledWindow {
+        width-request: 360;
+        min-content-width: 360;
+        hscrollbar-policy: never;
+        vexpand: true;
+
+        child: Box left_panel {
+          orientation: vertical;
+          spacing: 16;
+          hexpand: false;
+          vexpand: true;
+
+          $HexlyReaderSelector reader_selector {}
+
+          $HexlyCardSession card_session {}
+        };
+      }
+    };
+  };
+}

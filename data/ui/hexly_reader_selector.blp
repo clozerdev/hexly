@@ -1,0 +1,54 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $HexlyReaderSelector: Box {
+  orientation: vertical;
+  spacing: 6;
+
+  Label {
+    label: _("Reader (Active & Status)");
+
+    css-classes: [
+      "title-4",
+    ];
+
+    xalign: 0;
+    hexpand: true;
+  }
+
+  ListBox {
+    selection-mode: none;
+
+    css-classes: [
+      "boxed-list",
+    ];
+
+    Adw.ComboRow active_reader_row {
+      title: _("Reader");
+      use-subtitle: true;
+      subtitle: _("Select a PC/SC device");
+      subtitle-lines: 1;
+      selected: 0;
+
+      css-classes: [
+        "property",
+      ];
+
+      model: StringList {
+        strings [
+          _("No readers found"),
+        ]
+      };
+    }
+
+    Adw.ActionRow reader_status_row {
+      title: _("Status");
+      subtitle: _("Unknown");
+      subtitle-lines: 1;
+
+      css-classes: [
+        "property",
+      ];
+    }
+  }
+}

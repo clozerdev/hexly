@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Hexly
+Comment=Inspect and edit NFC card memory.
+GenericName=NFC Cards Memory Viewer
+Type=Application
+Exec=hexly
+Terminal=false
+Categories=GNOME;GTK;Utility;System;
+Keywords=NFC;Mifare;RFID;Card;Hex;Memory;Dump;Inspect;Gnome;GTK;
+Icon=@app_id@
+StartupNotify=true
