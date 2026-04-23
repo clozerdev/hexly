@@ -25,14 +25,22 @@ mod imp {
     impl ObjectImpl for HexlyApplication {}
 
     impl ApplicationImpl for HexlyApplication {
-        fn activate(&self) {
-            self.parent_activate();
-            self.obj().get_window().present();
-        }
-
         fn startup(&self) {
             self.parent_startup();
             gtk::Window::set_default_icon_name(APP_ID);
+        }
+
+        fn activate(&self) {
+            self.parent_activate();
+
+            let app = self.obj();
+            if let Some(window) = app.active_window() {
+                window.present();
+                return;
+            }
+
+            let window = super::HexlyWindow::new(app.upcast_ref());
+            window.present();
         }
     }
 
@@ -50,9 +58,5 @@ glib::wrapper! {
 impl HexlyApplication {
     pub fn new() -> Self {
         Object::builder().property("application-id", APP_ID).build()
-    }
-
-    pub fn get_window(&self) -> HexlyWindow {
-        HexlyWindow::new(&self)
     }
 }
