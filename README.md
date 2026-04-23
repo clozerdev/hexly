@@ -12,7 +12,6 @@
   <a href="#-features">✨ Features</a> •
   <a href="#-design-goals">🎯 Design Goals</a> •
   <a href="#-installation">📥 Installation</a> •
-  <a href="#-development">🧩 Development</a>
 </p>
 </div>
 
