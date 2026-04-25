@@ -11,7 +11,7 @@
   <a href="#-overview">🌌 Overview</a> •
   <a href="#-features">✨ Features</a> •
   <a href="#-design-goals">🎯 Design Goals</a> •
-  <a href="#-installation">📥 Installation</a> •
+  <a href="#-installation">📥 Installation</a>
 </p>
 </div>
 
@@ -102,7 +102,7 @@ sudo dnf install meson
 sudo pacman -S meson
 ```
 
-Then use the followind commands to build and install the application
+Then use the following commands to build and install the application
 
 ```bash
 meson setup build
@@ -110,7 +110,7 @@ ninja -C build
 ninja -C build install
 ```
 
-If you do not want to install the application system-widw, you can use a prefix:
+If you do not want to install the application system-wide, you can use a prefix:
 
 ```bash
 meson setup build --prefix=$HOME/.local
