@@ -3,6 +3,6 @@
 	<gresource prefix="/dev/clozer/Hexly/">
         <file compressed="true" preprocess="xml-stripblanks">ui/hexly_window.ui</file>
         <file compressed="true" preprocess="xml-stripblanks">ui/hexly_reader_selector.ui</file>
-        <file compressed="true" preprocess="xml-stripblanks">ui/hexly_card_session.ui</file>
+        <file compressed="true" preprocess="xml-stripblanks">ui/hexly_card_information.ui</file>
     </gresource>
 </gresources>

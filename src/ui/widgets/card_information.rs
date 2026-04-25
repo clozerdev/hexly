@@ -1,3 +1,4 @@
+use adw::{prelude::ActionRowExt, subclass::prelude::*};
 use gtk::glib;
 
 mod imp {
@@ -7,8 +8,8 @@ mod imp {
     use gtk::glib;
 
     #[derive(CompositeTemplate, Default)]
-    #[template(resource = "/dev/clozer/Hexly/ui/hexly_card_session.ui")]
-    pub struct CardSession {
+    #[template(resource = "/dev/clozer/Hexly/ui/hexly_card_information.ui")]
+    pub struct CardInformation {
         #[template_child(id = "card_uid_row")]
         pub uid_row: TemplateChild<adw::ActionRow>,
 
@@ -17,9 +18,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for CardSession {
-        const NAME: &'static str = "HexlyCardSession";
-        type Type = super::CardSession;
+    impl ObjectSubclass for CardInformation {
+        const NAME: &'static str = "HexlyCardInformation";
+        type Type = super::CardInformation;
         type ParentType = gtk::Box;
 
         fn class_init(klass: &mut Self::Class) {
@@ -31,21 +32,30 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for CardSession {
+    impl ObjectImpl for CardInformation {
         fn constructed(&self) {
             self.parent_constructed();
         }
     }
 
-    impl WidgetImpl for CardSession {}
+    impl WidgetImpl for CardInformation {}
 
-    impl BoxImpl for CardSession {}
+    impl BoxImpl for CardInformation {}
 }
 
 glib::wrapper! {
-    pub struct CardSession(ObjectSubclass<imp::CardSession>)
+    pub struct CardInformation(ObjectSubclass<imp::CardInformation>)
         @extends gtk::Widget, gtk::Box,
         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget, gtk::Orientable;
 }
 
-impl CardSession {}
+impl CardInformation {
+    pub fn set_uid(&self, uid_text: &str) {
+        self.imp().uid_row.set_subtitle(uid_text);
+    }
+
+    pub fn clear(&self) {
+        self.imp().uid_row.set_subtitle("-");
+        self.imp().capacity_row.set_subtitle("-");
+    }
+}

@@ -6,7 +6,7 @@ template $HexlyReaderSelector: Box {
   spacing: 6;
 
   Label {
-    label: _("Reader (Active & Status)");
+    label: _("Reader");
 
     css-classes: [
       "title-4",
@@ -24,7 +24,7 @@ template $HexlyReaderSelector: Box {
     ];
 
     Adw.ComboRow active_reader_row {
-      title: _("Reader");
+      title: _("Device");
       use-subtitle: true;
       subtitle: _("Select a PC/SC device");
       subtitle-lines: 1;
@@ -36,7 +36,7 @@ template $HexlyReaderSelector: Box {
 
       model: StringList {
         strings [
-          _("No readers found"),
+          _("Unknown"),
         ]
       };
     }

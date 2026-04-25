@@ -1,9 +1,9 @@
 subdir('icons')
 
 blueprint_files = [
-  'ui/hexly_card_session.blp',
-  'ui/hexly_reader_selector.blp',
   'ui/hexly_window.blp',
+  'ui/hexly_reader_selector.blp',
+  'ui/hexly_card_information.blp',
 ]
 
 blueprints = custom_target(

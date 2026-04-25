@@ -1,12 +1,12 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $HexlyCardSession: Box {
+template $HexlyCardInformation: Box {
   orientation: vertical;
   spacing: 6;
 
   Label {
-    label: _("Card session");
+    label: _("Card Information");
 
     css-classes: [
       "title-4",
@@ -34,8 +34,9 @@ template $HexlyCardSession: Box {
 
     Adw.ActionRow card_capacity_row {
       title: _("Capacity");
-      subtitle: _("1024 bytes · 16 sectors · 64 blocks");
-      // subtitle: _("-");
+      // subtitle: _("1024 bytes · 16 sectors · 64 blocks");
+      subtitle: _("-");
+
       css-classes: [
         "property",
       ];
