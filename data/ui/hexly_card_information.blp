@@ -1,45 +1,60 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $HexlyCardInformation: Box {
-  orientation: vertical;
-  spacing: 6;
+template $HexlyCardInformation: Adw.PreferencesGroup {
+  title: _("Card Information");
+  description: _("Details about the detected smartcard");
 
-  Label {
-    label: _("Card Information");
+  Adw.ActionRow card_uid_row {
+    title: _("UID");
+    subtitle: _("-");
+    subtitle-lines: 1;
 
     css-classes: [
-      "title-4",
+      "property",
+      "monospace",
     ];
-
-    xalign: 0;
   }
 
-  ListBox {
-    selection-mode: none;
+  Adw.ActionRow card_atr_row {
+    title: _("ATR");
+    subtitle: _("-");
+    subtitle-lines: 1;
 
     css-classes: [
-      "boxed-list",
+      "property",
+      "monospace",
     ];
 
-    Adw.ActionRow card_uid_row {
-      title: _("UID");
-      subtitle: _("-");
+    [suffix]
+    Button btn_copy_atr {
+      tooltip-text: _("Copy ATR");
+      icon-name: "edit-copy-symbolic";
 
-      css-classes: [
-        "property",
-        "monospace",
-      ];
+      sensitive: false;
+      valign: center;
+
+      styles [ "flat" ]
     }
+  }
 
-    Adw.ActionRow card_capacity_row {
-      title: _("Capacity");
-      // subtitle: _("1024 bytes · 16 sectors · 64 blocks");
-      subtitle: _("-");
+  Adw.ActionRow card_type_row {
+    title: _("Type");
+    subtitle: _("-");
+    subtitle-lines: 1;
 
-      css-classes: [
-        "property",
-      ];
-    }
+    css-classes: [
+      "property",
+    ];
+  }
+
+  Adw.ActionRow card_capacity_row {
+    title: _("Capacity");
+    subtitle: _("-");
+    subtitle-lines: 1;
+
+    css-classes: [
+      "property",
+    ];
   }
 }

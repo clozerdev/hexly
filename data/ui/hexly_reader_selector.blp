@@ -1,54 +1,37 @@
 using Gtk 4.0;
 using Adw 1;
 
-template $HexlyReaderSelector: Box {
-  orientation: vertical;
-  spacing: 6;
+template $HexlyReaderSelector: Adw.PreferencesGroup {
+  title: _("Reader");
+  description: _("Select the smartcard reader device");
 
-  Label {
-    label: _("Reader");
+  Adw.ComboRow active_reader_row {
+    title: _("Device");
+    use-subtitle: true;
+
+    subtitle: _("Select a PC/SC device");
+    subtitle-lines: 1;
+
+    selected: 0;
 
     css-classes: [
-      "title-4",
+      "property",
     ];
 
-    xalign: 0;
-    hexpand: true;
+    model: StringList {
+      strings [
+        "Unknown",
+      ]
+    };
   }
 
-  ListBox {
-    selection-mode: none;
+  Adw.ActionRow reader_status_row {
+    title: _("Status");
+    subtitle: _("Unknown");
+    subtitle-lines: 1;
 
     css-classes: [
-      "boxed-list",
+      "property",
     ];
-
-    Adw.ComboRow active_reader_row {
-      title: _("Device");
-      use-subtitle: true;
-      subtitle: _("Select a PC/SC device");
-      subtitle-lines: 1;
-      selected: 0;
-
-      css-classes: [
-        "property",
-      ];
-
-      model: StringList {
-        strings [
-          _("Unknown"),
-        ]
-      };
-    }
-
-    Adw.ActionRow reader_status_row {
-      title: _("Status");
-      subtitle: _("Unknown");
-      subtitle-lines: 1;
-
-      css-classes: [
-        "property",
-      ];
-    }
   }
 }

@@ -11,6 +11,7 @@ use crate::core::pcsc::types::ReaderInfo;
 
 mod imp {
     use adw::prelude::ComboRowExt;
+    use adw::subclass::prelude::PreferencesGroupImpl;
     use gtk::subclass::prelude::*;
 
     use gtk::CompositeTemplate;
@@ -30,7 +31,7 @@ mod imp {
     impl ObjectSubclass for ReaderSelector {
         const NAME: &'static str = "HexlyReaderSelector";
         type Type = super::ReaderSelector;
-        type ParentType = gtk::Box;
+        type ParentType = adw::PreferencesGroup;
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
@@ -58,12 +59,12 @@ mod imp {
 
     impl WidgetImpl for ReaderSelector {}
 
-    impl BoxImpl for ReaderSelector {}
+    impl PreferencesGroupImpl for ReaderSelector {}
 }
 
 glib::wrapper! {
     pub struct ReaderSelector(ObjectSubclass<imp::ReaderSelector>)
-        @extends gtk::Widget, gtk::Box,
+        @extends gtk::Widget, adw::PreferencesGroup,
         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget, gtk::Orientable;
 }
 
@@ -72,7 +73,6 @@ impl ReaderSelector {
         let imp = self.imp();
 
         if readers.is_empty() {
-            self.clear_reader_info();
             return;
         }
 
@@ -82,7 +82,7 @@ impl ReaderSelector {
         let model = gtk::StringList::new(
             &readers
                 .iter()
-                .map(|reader| reader.name.as_str())
+                .map(|reader| reader.reader_name.as_str())
                 .collect::<Vec<&str>>(),
         );
 
@@ -111,7 +111,7 @@ impl ReaderSelector {
             .set_tooltip_text(reader_name.as_deref());
     }
 
-    pub fn clear_reader_info(&self) {
+    pub fn clear_ui(&self) {
         let imp = self.imp();
 
         let empty = gtk::StringList::new(&[]);
@@ -119,7 +119,7 @@ impl ReaderSelector {
         imp.active_reader_row
             .set_selected(gtk::INVALID_LIST_POSITION);
         imp.active_reader_row.set_sensitive(false);
-        imp.active_reader_row.set_subtitle("-");
+        imp.active_reader_row.set_subtitle("No readers found");
 
         imp.reader_status_row.set_subtitle("Unknown");
         imp.reader_status_row.set_sensitive(false);

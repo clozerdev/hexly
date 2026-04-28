@@ -14,22 +14,6 @@ template $HexlyWindow: Adw.ApplicationWindow {
         subtitle: _("Mifare Classic Tool · PC/SC reader");
       };
 
-      [start]
-      Button refresh_button {
-        tooltip-text: _("Refresh readers list");
-
-        css-classes: [
-          "flat",
-        ];
-
-        clicked => $on_refresh_readers() swapped;
-
-        child: Image {
-          icon-name: "view-refresh-symbolic";
-          pixel-size: 16;
-        };
-      }
-
       [end]
       MenuButton {
         tooltip-text: _("Application menu");
@@ -85,7 +69,7 @@ template $HexlyWindow: Adw.ApplicationWindow {
 
         child: Box left_panel {
           orientation: vertical;
-          spacing: 16;
+          spacing: 20;
           hexpand: false;
           vexpand: true;
 

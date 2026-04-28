@@ -3,35 +3,27 @@ use gtk::glib;
 use gtk::subclass::prelude::*;
 
 use crate::config::APP_ID;
-use crate::core::pcsc::service::PcscService;
+use crate::core::pcsc::types::PcscEvent;
+use crate::core::pcsc::worker::PcscWorker;
 use crate::ui::window::HexlyWindow;
 
 mod imp {
-    use super::APP_ID;
-
     use std::cell::OnceCell;
+
+    use super::APP_ID;
 
     use adw::subclass::prelude::*;
 
     use gtk::glib;
     use gtk::prelude::*;
 
-    use crate::core::pcsc::service::PcscService;
-    use crate::ui::window::HexlyWindow;
+    use crate::core::pcsc::types::PcscEvent;
+    use crate::core::pcsc::worker::PcscWorker;
 
     #[derive(Default)]
     pub struct HexlyApplication {
-        pub pcsc_service: OnceCell<PcscService>,
-    }
-
-    impl HexlyApplication {
-        fn init_pcsc_service(&self) {
-            let service = PcscService::new().expect("Failed to initialize PC/SC service");
-
-            if self.pcsc_service.set(service).is_err() {
-                panic!("PC/SC error initializing");
-            }
-        }
+        pub pcsc_worker: OnceCell<PcscWorker>,
+        pub pcsc_event_receiver: OnceCell<async_channel::Receiver<PcscEvent>>,
     }
 
     #[glib::object_subclass]
@@ -48,7 +40,19 @@ mod imp {
             self.parent_startup();
             gtk::Window::set_default_icon_name(APP_ID);
 
-            self.init_pcsc_service();
+            let style_manager = adw::StyleManager::default();
+            style_manager.set_color_scheme(adw::ColorScheme::Default);
+
+            let (sender, receiver) = async_channel::unbounded();
+            let worker = PcscWorker::start(sender);
+
+            self.pcsc_worker
+                .set(worker)
+                .expect("Worker already initialized");
+
+            self.pcsc_event_receiver
+                .set(receiver)
+                .expect("Receiver already initialized");
         }
 
         fn activate(&self) {
@@ -57,11 +61,6 @@ mod imp {
             let app = self.obj();
             if let Some(window) = app.active_window() {
                 window.present();
-
-                if let Ok(window) = window.downcast::<HexlyWindow>() {
-                    window.init_window();
-                }
-
                 return;
             }
 
@@ -87,10 +86,18 @@ impl HexlyApplication {
         Object::builder().property("application-id", APP_ID).build()
     }
 
-    pub fn pcsc_service(&self) -> &PcscService {
+    pub fn pcsc_worker(&self) -> &PcscWorker {
         self.imp()
-            .pcsc_service
+            .pcsc_worker
             .get()
-            .expect("PC/SC service not initialized")
+            .expect("PcscWorker not initialized")
+    }
+
+    pub fn pcsc_receiver(&self) -> async_channel::Receiver<PcscEvent> {
+        self.imp()
+            .pcsc_event_receiver
+            .get()
+            .expect("PcscReceiver not initialized")
+            .clone()
     }
 }
