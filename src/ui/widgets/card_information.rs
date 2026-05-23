@@ -15,7 +15,7 @@ mod imp {
     use gtk::glib;
 
     #[derive(CompositeTemplate, Default)]
-    #[template(resource = "/dev/clozer/Hexly/ui/hexly_card_information.ui")]
+    #[template(resource = "/dev/clozer/Hexly/ui/card_information.ui")]
     pub struct CardInformation {
         #[template_child(id = "card_uid_row")]
         pub uid_row: TemplateChild<adw::ActionRow>,

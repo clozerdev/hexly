@@ -28,7 +28,7 @@ mod imp {
     use crate::ui::widgets::reader_selector::ReaderSelector;
 
     #[derive(CompositeTemplate, Default)]
-    #[template(resource = "/dev/clozer/Hexly/ui/hexly_window.ui")]
+    #[template(resource = "/dev/clozer/Hexly/ui/main_window.ui")]
     pub struct HexlyWindow {
         #[template_child(id = "reader_selector")]
         pub reader_selector: TemplateChild<ReaderSelector>,

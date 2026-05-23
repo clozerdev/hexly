@@ -1,11 +1,89 @@
-use glib::Object;
+use adw::prelude::*;
+use gtk::gio;
 use gtk::glib;
+use gtk::glib::clone;
+
+use glib::Object;
+
 use gtk::subclass::prelude::*;
 
 use crate::config::APP_ID;
 use crate::core::pcsc::types::PcscEvent;
 use crate::core::pcsc::worker::PcscWorker;
 use crate::ui::window::HexlyWindow;
+use crate::ui::windows::settings::Shell;
+
+glib::wrapper! {
+    pub struct HexlyApplication(ObjectSubclass<imp::HexlyApplication>)
+        @extends adw::gio::Application, adw::Application, gtk::Application,
+        @implements gtk::gio::ActionMap, gtk::gio::ActionGroup;
+}
+
+impl HexlyApplication {
+    pub fn new() -> Self {
+        Object::builder().property("application-id", APP_ID).build()
+    }
+
+    pub fn pcsc_worker(&self) -> &PcscWorker {
+        self.imp()
+            .pcsc_worker
+            .get()
+            .expect("PcscWorker not initialized")
+    }
+
+    pub fn pcsc_receiver(&self) -> async_channel::Receiver<PcscEvent> {
+        self.imp()
+            .pcsc_event_receiver
+            .get()
+            .expect("PcscReceiver not initialized")
+            .clone()
+    }
+
+    pub fn setup_app_actions(&self) {
+        let settings_action = gio::SimpleAction::new("preferences", None);
+        settings_action.connect_activate(clone!(
+            #[weak(rename_to = app)]
+            self,
+            move |_, _| {
+                let parent_window = app.active_window();
+                let settings_window = adw::Window::builder()
+                    .application(&app)
+                    .title("Settings")
+                    .default_width(980)
+                    .default_height(680)
+                    .build();
+
+                if let Some(parent) = parent_window.as_ref() {
+                    settings_window.set_transient_for(Some(parent));
+                }
+
+                let shell = Shell::new();
+                shell.set_page("card-authentication");
+
+                settings_window.set_content(Some(&shell));
+                settings_window.present();
+            }
+        ));
+
+        let quit_action = gio::SimpleAction::new("quit", None);
+        quit_action.connect_activate(clone!(
+            #[weak(rename_to = app)]
+            self,
+            move |_, _| {
+                for window in app.windows() {
+                    window.close();
+                }
+
+                if app.windows().is_empty() {
+                    app.quit();
+                }
+            }
+        ));
+
+        self.add_action(&settings_action);
+        self.add_action(&quit_action);
+    }
+}
 
 mod imp {
     use std::cell::OnceCell;
@@ -53,6 +131,8 @@ mod imp {
             self.pcsc_event_receiver
                 .set(receiver)
                 .expect("Receiver already initialized");
+
+            self.obj().setup_app_actions();
         }
 
         fn activate(&self) {
@@ -73,31 +153,4 @@ mod imp {
     impl GtkApplicationImpl for HexlyApplication {}
 
     impl AdwApplicationImpl for HexlyApplication {}
-}
-
-glib::wrapper! {
-    pub struct HexlyApplication(ObjectSubclass<imp::HexlyApplication>)
-        @extends adw::gio::Application, adw::Application, gtk::Application,
-        @implements gtk::gio::ActionMap, gtk::gio::ActionGroup;
-}
-
-impl HexlyApplication {
-    pub fn new() -> Self {
-        Object::builder().property("application-id", APP_ID).build()
-    }
-
-    pub fn pcsc_worker(&self) -> &PcscWorker {
-        self.imp()
-            .pcsc_worker
-            .get()
-            .expect("PcscWorker not initialized")
-    }
-
-    pub fn pcsc_receiver(&self) -> async_channel::Receiver<PcscEvent> {
-        self.imp()
-            .pcsc_event_receiver
-            .get()
-            .expect("PcscReceiver not initialized")
-            .clone()
-    }
 }

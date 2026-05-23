@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schemalist>
+  <schema id="@app_id@" path="@settings_path@">
+    <key name="default-auth-keys" type="b">
+      <default>true</default>
+      <summary>Use default MIFARE authentication key</summary>
+    </key>
+  </schema>
+</schemalist>

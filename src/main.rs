@@ -3,6 +3,7 @@ mod config;
 
 mod app;
 mod core;
+mod settings;
 mod ui;
 mod utils;
 

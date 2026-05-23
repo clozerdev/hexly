@@ -1,0 +1,50 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $HexlySettingsShell: Adw.BreakpointBin {
+  width-request: 240;
+  height-request: 240;
+
+  Adw.Breakpoint {
+    condition ("max-width: 500sp")
+
+    setters {
+      split_view.collapsed: true;
+    }
+  }
+
+  Adw.NavigationSplitView split_view {
+    collapsed: false;
+
+    sidebar: Adw.NavigationPage sidebar {
+      title: _("Settings");
+
+      child: Adw.ToolbarView {
+        content: Gtk.ScrolledWindow {
+          Gtk.ListBox sidebar_box {
+            styles [
+              "navigation-sidebar",
+            ]
+
+            activate-on-single-click: true;
+            row-activated => $on_row_selected() swapped;
+          }
+        };
+
+        [top]
+        Adw.HeaderBar sidebar_header_bar {}
+      };
+    };
+
+    content: Adw.NavigationPage settings_page {
+      title: _("Settings");
+
+      child: Adw.ToolbarView {
+        content: Adw.ViewStack settings_stack {};
+
+        [top]
+        Adw.HeaderBar settings_header_bar {}
+      };
+    };
+  }
+}

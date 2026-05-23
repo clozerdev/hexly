@@ -11,13 +11,14 @@ template $HexlyWindow: Adw.ApplicationWindow {
     Adw.HeaderBar {
       title-widget: Adw.WindowTitle {
         title: _("Hexly");
-        subtitle: _("Mifare Classic Tool · PC/SC reader");
+        subtitle: _("Mifare Classic Tool · PC/SC");
       };
 
       [end]
       MenuButton {
         tooltip-text: _("Application menu");
         icon-name: "open-menu-symbolic";
+        menu-model: main_menu;
 
         css-classes: [
           "flat",
@@ -69,7 +70,7 @@ template $HexlyWindow: Adw.ApplicationWindow {
 
         child: Box left_panel {
           orientation: vertical;
-          spacing: 20;
+          spacing: 24;
           hexpand: false;
           vexpand: true;
 
@@ -80,4 +81,24 @@ template $HexlyWindow: Adw.ApplicationWindow {
       }
     };
   };
+}
+
+menu main_menu {
+  section {
+    item {
+      label: _("Settings");
+      action: "app.preferences";
+    }
+  }
+
+  section {
+    item {
+      label: _("About Hexly");
+    }
+
+    item {
+      label: _("Quit");
+      action: "app.quit";
+    }
+  }
 }

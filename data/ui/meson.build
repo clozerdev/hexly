@@ -1,6 +1,6 @@
 resources = gnome.compile_resources(
     'ui',
-    'resources.gresource.xml',
+    'hexly.gresource.xml',
     gresource_bundle: true,
     source_dir: meson.current_source_dir(),
     install: true,

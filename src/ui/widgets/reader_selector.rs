@@ -18,7 +18,7 @@ mod imp {
     use gtk::glib;
 
     #[derive(CompositeTemplate, Default)]
-    #[template(resource = "/dev/clozer/Hexly/ui/hexly_reader_selector.ui")]
+    #[template(resource = "/dev/clozer/Hexly/ui/reader_selector.ui")]
     pub struct ReaderSelector {
         #[template_child(id = "active_reader_row")]
         pub active_reader_row: TemplateChild<adw::ComboRow>,
