@@ -19,30 +19,30 @@ template $HexlyCardContentsPanel: Adw.Bin {
 
       Adw.ViewStackPage {
         name: "no-reader";
+
         child: Adw.StatusPage {
           title: _("No reader available");
           description: _("Connect a PC/SC-compatible reader to start.");
-
           icon-name: "computer-fail-symbolic";
         };
       }
 
       Adw.ViewStackPage {
         name: "no-card";
+
         child: Adw.StatusPage {
           title: _("No card detected");
           description: _("Place a card on the selected reader.");
-
           icon-name: "process-stop-symbolic";
         };
       }
 
       Adw.ViewStackPage {
         name: "card-detected";
+
         child: Adw.StatusPage {
           title: _("Card detected");
           description: _("Read the card to inspect its contents.");
-
           icon-name: "auth-smartcard-symbolic";
 
           child: Gtk.Box {
@@ -73,6 +73,7 @@ template $HexlyCardContentsPanel: Adw.Bin {
 
       Adw.ViewStackPage {
         name: "reading";
+
         child: Adw.StatusPage {
           title: _("Reading card...");
           description: _("Sector 0 of 0");
@@ -104,6 +105,7 @@ template $HexlyCardContentsPanel: Adw.Bin {
 
       Adw.ViewStackPage {
         name: "partial";
+
         child: Adw.StatusPage {
           title: _("Card partially read");
           description: _("Some sectors require unknown keys.");
@@ -121,6 +123,7 @@ template $HexlyCardContentsPanel: Adw.Bin {
 
       Adw.ViewStackPage {
         name: "error";
+
         child: Adw.StatusPage {
           title: _("Could not read card");
           description: _("The card was removed or the reader stopped responding.");
@@ -136,16 +139,17 @@ template $HexlyCardContentsPanel: Adw.Bin {
 
       Adw.ViewStackPage {
         name: "data";
+
         child: Gtk.Box {
           orientation: vertical;
           spacing: 12;
           hexpand: true;
           vexpand: true;
 
-            Gtk.Box {
-              orientation: horizontal;
-              spacing: 12;
-              hexpand: true;
+          Gtk.Box {
+            orientation: horizontal;
+            spacing: 12;
+            hexpand: true;
 
             Adw.ViewSwitcher {
               stack: card_contents_view_stack;
@@ -154,7 +158,7 @@ template $HexlyCardContentsPanel: Adw.Bin {
               hexpand: true;
 
               styles [
-                "hexly-card-tabs"
+                "hexly-card-tabs",
               ]
             }
 
@@ -357,11 +361,9 @@ template $HexlyCardContentsPanel: Adw.Bin {
                 };
               };
             }
-
           }
         };
       }
     }
   };
 }
-
