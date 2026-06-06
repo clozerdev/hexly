@@ -1,0 +1,367 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $HexlyCardContentsPanel: Adw.Bin {
+  child: Gtk.Box {
+    orientation: vertical;
+    spacing: 0;
+    hexpand: true;
+    vexpand: true;
+
+    Adw.PreferencesGroup {
+      title: _("Card Contents");
+      description: _("Read and inspect the detected smartcard data");
+    }
+
+    Adw.ViewStack card_contents_state_stack {
+      hexpand: true;
+      vexpand: true;
+
+      Adw.ViewStackPage {
+        name: "no-reader";
+        child: Adw.StatusPage {
+          title: _("No reader available");
+          description: _("Connect a PC/SC-compatible reader to start.");
+
+          icon-name: "computer-fail-symbolic";
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "no-card";
+        child: Adw.StatusPage {
+          title: _("No card detected");
+          description: _("Place a card on the selected reader.");
+
+          icon-name: "process-stop-symbolic";
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "card-detected";
+        child: Adw.StatusPage {
+          title: _("Card detected");
+          description: _("Read the card to inspect its contents.");
+
+          icon-name: "auth-smartcard-symbolic";
+
+          child: Gtk.Box {
+            orientation: vertical;
+            spacing: 12;
+            halign: center;
+
+            Gtk.Label detected_uid_label {
+              label: _("UID: -");
+
+              styles [
+                "monospace",
+                "title-4",
+              ]
+            }
+
+            Gtk.Button read_card_button {
+              label: _("Read card");
+              sensitive: false;
+
+              styles [
+                "suggested-action",
+              ]
+            }
+          };
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "reading";
+        child: Adw.StatusPage {
+          title: _("Reading card...");
+          description: _("Sector 0 of 0");
+          icon-name: "view-refresh-symbolic";
+
+          child: Gtk.Box {
+            orientation: vertical;
+            spacing: 12;
+            width-request: 420;
+            halign: center;
+
+            Gtk.ProgressBar read_progress_bar {
+              show-text: true;
+              text: _("0%");
+              fraction: 0.0;
+            }
+
+            Gtk.Label read_progress_detail_label {
+              halign: center;
+              label: _("Waiting for read operation...");
+
+              styles [
+                "dim-label",
+              ]
+            }
+          };
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "partial";
+        child: Adw.StatusPage {
+          title: _("Card partially read");
+          description: _("Some sectors require unknown keys.");
+          icon-name: "dialog-warning-symbolic";
+
+          child: Gtk.Label partial_read_summary_label {
+            label: _("0 of 0 sectors were readable.");
+
+            styles [
+              "title-4",
+            ]
+          };
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "error";
+        child: Adw.StatusPage {
+          title: _("Could not read card");
+          description: _("The card was removed or the reader stopped responding.");
+          icon-name: "dialog-error-symbolic";
+
+          child: Gtk.Label read_error_label {
+            label: _("No additional details.");
+            wrap: true;
+            justify: center;
+          };
+        };
+      }
+
+      Adw.ViewStackPage {
+        name: "data";
+        child: Gtk.Box {
+          orientation: vertical;
+          spacing: 12;
+          hexpand: true;
+          vexpand: true;
+
+            Gtk.Box {
+              orientation: horizontal;
+              spacing: 12;
+              hexpand: true;
+
+            Adw.ViewSwitcher {
+              stack: card_contents_view_stack;
+              policy: wide;
+              halign: start;
+              hexpand: true;
+
+              styles [
+                "hexly-card-tabs"
+              ]
+            }
+
+            Gtk.Box sectors_expand_switch_box {
+              orientation: horizontal;
+              spacing: 6;
+              halign: end;
+              valign: center;
+              visible: false;
+
+              Gtk.Label {
+                label: _("Expand all");
+
+                styles [
+                  "dim-label",
+                ]
+              }
+
+              Gtk.Switch sectors_expand_switch {
+                sensitive: false;
+              }
+            }
+
+            Gtk.Box editor_actions_box {
+              orientation: horizontal;
+              spacing: 8;
+              halign: end;
+              valign: center;
+              visible: false;
+
+              Gtk.Button editor_reset_button {
+                label: _("Reset changes");
+                sensitive: false;
+
+                styles [
+                  "destructive-action",
+                ]
+              }
+
+              Gtk.Button editor_write_button {
+                label: _("Write changed blocks");
+                sensitive: false;
+
+                styles [
+                  "suggested-action",
+                ]
+              }
+            }
+          }
+
+          Adw.ViewStack card_contents_view_stack {
+            hexpand: true;
+            vexpand: true;
+
+            Adw.ViewStackPage {
+              name: "overview";
+              title: _("Overview");
+              icon-name: "view-grid-symbolic";
+
+              child: Gtk.ScrolledWindow {
+                hscrollbar-policy: never;
+                vexpand: true;
+
+                child: Adw.PreferencesGroup {
+                  title: _("Memory");
+                  hexpand: true;
+
+                  Adw.ActionRow overview_memory_row {
+                    title: _("Layout");
+                    subtitle: _("- sectors · - blocks · - bytes");
+
+                    css-classes: [
+                      "property",
+                    ];
+                  }
+
+                  Adw.ActionRow overview_readable_row {
+                    title: _("Readable sectors");
+                    subtitle: _("- / -");
+
+                    css-classes: [
+                      "property",
+                    ];
+                  }
+
+                  Adw.ActionRow overview_protected_row {
+                    title: _("Protected sectors");
+                    subtitle: _("- / -");
+
+                    css-classes: [
+                      "property",
+                    ];
+                  }
+
+                  Adw.ActionRow overview_keya_row {
+                    title: _("Known Key A");
+                    subtitle: _("-");
+
+                    css-classes: [
+                      "property",
+                    ];
+                  }
+
+                  Adw.ActionRow overview_keyb_row {
+                    title: _("Known Key B");
+                    subtitle: _("-");
+
+                    css-classes: [
+                      "property",
+                    ];
+                  }
+                };
+              };
+            }
+
+            Adw.ViewStackPage {
+              name: "sectors";
+              title: _("Sectors");
+              icon-name: "view-list-symbolic";
+
+              child: Gtk.ScrolledWindow {
+                hscrollbar-policy: never;
+                vexpand: true;
+
+                child: Gtk.Box sectors_groups_box {
+                  orientation: vertical;
+                  spacing: 12;
+                  hexpand: true;
+                  margin-top: 4;
+                  margin-bottom: 4;
+                };
+              };
+            }
+
+            Adw.ViewStackPage {
+              name: "editor";
+              title: _("Editor");
+              icon-name: "document-edit-symbolic";
+
+              child: Gtk.ScrolledWindow {
+                hscrollbar-policy: never;
+                vexpand: true;
+
+                child: Gtk.Box {
+                  orientation: vertical;
+                  spacing: 12;
+                  margin-top: 4;
+                  margin-bottom: 4;
+
+                  Adw.PreferencesGroup {
+                    title: _("Working Copy");
+                    description: _("Edit local data and write only changed blocks");
+
+                    Adw.ActionRow editor_status_row {
+                      title: _("Status");
+                      subtitle: _("Load a card dump to start editing.");
+
+                      css-classes: [
+                        "property",
+                      ];
+                    }
+
+                    Adw.ActionRow editor_changes_row {
+                      title: _("Changed blocks");
+                      subtitle: _("0");
+
+                      css-classes: [
+                        "property",
+                      ];
+                    }
+                  }
+
+                  Gtk.Box editor_blocks_box {
+                    orientation: vertical;
+                    spacing: 12;
+                    hexpand: true;
+                  }
+                };
+              };
+            }
+
+            Adw.ViewStackPage {
+              name: "hex-dump";
+              title: _("Hex Dump");
+              icon-name: "text-x-generic-symbolic";
+
+              child: Gtk.ScrolledWindow {
+                hscrollbar-policy: automatic;
+                vexpand: true;
+
+                child: Gtk.TextView hex_dump_text_view {
+                  editable: false;
+                  cursor-visible: false;
+                  wrap-mode: none;
+                  monospace: true;
+                  top-margin: 12;
+                  bottom-margin: 12;
+                  left-margin: 12;
+                  right-margin: 12;
+                };
+              };
+            }
+
+          }
+        };
+      }
+    }
+  };
+}
+

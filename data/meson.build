@@ -4,6 +4,7 @@ blueprint_files = [
   'ui/main_window.blp',
   'ui/reader_selector.blp',
   'ui/card_information.blp',
+  'ui/card_contents_panel.blp',
   'ui/settings/pill.blp',
   'ui/settings/shell.blp',
   'ui/settings/page_card_authentication.blp',

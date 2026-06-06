@@ -4,6 +4,8 @@
         <file compressed="true" preprocess="xml-stripblanks">ui/main_window.ui</file>
         <file compressed="true" preprocess="xml-stripblanks">ui/reader_selector.ui</file>
         <file compressed="true" preprocess="xml-stripblanks">ui/card_information.ui</file>
+        <file compressed="true" preprocess="xml-stripblanks">ui/card_contents_panel.ui</file>
+        <file compressed="true">ui/style.css</file>
         <file compressed="true" preprocess="xml-stripblanks">ui/settings/pill.ui</file>
         <file compressed="true" preprocess="xml-stripblanks">ui/settings/shell.ui</file>
         <file compressed="true" preprocess="xml-stripblanks">ui/settings/page_card_authentication.ui</file>

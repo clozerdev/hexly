@@ -1,27 +1,10 @@
-use adw::prelude::AdwApplicationWindowExt;
+use gtk::glib;
 
-use gtk::glib::object::{CastNone, MayDowncastTo};
-use gtk::prelude::*;
-use gtk::subclass::prelude::*;
+use adw::prelude::*;
 
-/// A trait to be used by shell widgets.
-pub trait CommonShell: WidgetImpl
-where
-    <Self as ObjectSubclass>::Type: IsA<gtk::Widget>,
-{
-    /// Returns the root() object, already casted to gtk::ApplicationWindow.
-    fn get_application_window(&self) -> Option<gtk::ApplicationWindow> {
-        self.obj().root().and_downcast()
-    }
+use glib::object::MayDowncastTo;
 
-    fn is_client_side(&self) -> bool {
-        self.get_application_window()
-            .and_downcast::<adw::ApplicationWindow>()
-            .is_some()
-    }
-}
-
-pub fn get_window_shell<T>(win: &T) -> Option<gtk::Widget>
+pub(crate) fn get_window_shell<T>(win: &T) -> Option<gtk::Widget>
 where
     T: IsA<gtk::Window> + MayDowncastTo<adw::ApplicationWindow>,
 {

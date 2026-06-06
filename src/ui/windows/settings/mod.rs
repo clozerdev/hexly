@@ -1,6 +1,5 @@
+pub(crate) mod pages;
 mod pill;
 mod shell;
 
-pub mod pages;
-
-pub use shell::Shell;
+pub(crate) use shell::Shell;

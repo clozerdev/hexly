@@ -1,29 +1,32 @@
-use glib::Object;
-use gtk::{
-    gio,
-    glib::{self, object::Cast},
-};
+use gtk::gio;
+use gtk::glib;
 
 use gtk::prelude::*;
 use gtk::subclass::prelude::*;
 
-use crate::{
-    app::HexlyApplication,
-    core::pcsc::{
-        format_bytes,
-        types::{CardInfo, PcscCommand, PcscEvent, ReaderInfo},
-        utils::ByteFormat,
-    },
-    utils::format::{format_capacity, format_card_kind},
-};
+use glib::Object;
+
+use crate::app::HexlyApplication;
+
+use crate::core::nfc::messages::NfcCommand;
+use crate::core::nfc::messages::NfcEvent;
+use crate::core::state::AppState;
+use crate::core::state::{Reader, ReaderId};
+
+use crate::ui::formatters::format_card_type;
+use crate::ui::formatters::format_reader_status;
 
 mod imp {
+    use super::*;
+
+    use std::cell::RefCell;
+
     use adw::subclass::prelude::*;
 
+    use glib::types::StaticTypeExt;
     use gtk::CompositeTemplate;
-    use gtk::glib;
-    use gtk::glib::types::StaticTypeExt;
 
+    use crate::ui::widgets::card_contents_panel::CardContentsPanel;
     use crate::ui::widgets::card_information::CardInformation;
     use crate::ui::widgets::reader_selector::ReaderSelector;
 
@@ -31,10 +34,21 @@ mod imp {
     #[template(resource = "/dev/clozer/Hexly/ui/main_window.ui")]
     pub struct HexlyWindow {
         #[template_child(id = "reader_selector")]
-        pub reader_selector: TemplateChild<ReaderSelector>,
+        pub(super) reader_selector: TemplateChild<ReaderSelector>,
 
         #[template_child(id = "card_information")]
-        pub card_information: TemplateChild<CardInformation>,
+        pub(super) card_information: TemplateChild<CardInformation>,
+
+        #[template_child(id = "card_contents_panel")]
+        pub(super) card_contents_panel: TemplateChild<CardContentsPanel>,
+
+        #[template_child(id = "event_log_scrolled_window")]
+        pub(super) event_log_scrolled_window: TemplateChild<gtk::ScrolledWindow>,
+
+        #[template_child(id = "event_log_text_view")]
+        pub(super) event_log_text_view: TemplateChild<gtk::TextView>,
+
+        pub(super) state: RefCell<AppState>,
     }
 
     #[glib::object_subclass]
@@ -46,6 +60,7 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             ReaderSelector::ensure_type();
             CardInformation::ensure_type();
+            CardContentsPanel::ensure_type();
 
             klass.bind_template();
         }
@@ -55,7 +70,13 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for HexlyWindow {}
+    impl ObjectImpl for HexlyWindow {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            self.obj().init_state();
+        }
+    }
 
     impl WidgetImpl for HexlyWindow {}
 
@@ -73,160 +94,191 @@ glib::wrapper! {
 }
 
 impl HexlyWindow {
-    pub fn new(app: &HexlyApplication) -> Self {
+    pub(crate) fn new(app: &HexlyApplication) -> Self {
         Object::builder().property("application", Some(app)).build()
     }
 
-    fn app(&self) -> HexlyApplication {
-        self.application()
-            .expect("Window has no application")
-            .downcast::<HexlyApplication>()
-            .expect("Expected HexlyApplication")
-    }
-
-    pub fn init_window(&self) {
-        self.setup_pcsc_events();
-        self.refresh_readers();
-    }
-
-    // #region PC/SC commands & monitoring
-    pub fn refresh_readers(&self) {
-        let app = self.app();
-        let worker = app.pcsc_worker();
-
-        if let Err(err) = worker.sender().try_send(PcscCommand::RefreshReaders) {
-            eprintln!("Failed to send RefreshReaders command: {err}");
-
-            self.imp().reader_selector.clear_ui();
-            self.imp().card_information.clear_ui();
-        }
-    }
-
-    fn setup_pcsc_events(&self) {
-        println!("UI: Setting PCSC events");
-
-        let app = self.app();
-        let receiver = app.pcsc_receiver();
-
-        let weak_window = self.downgrade();
-        glib::MainContext::default().spawn_local(async move {
-            while let Ok(event) = receiver.recv().await {
-                let Some(window) = weak_window.upgrade() else {
-                    break;
-                };
-
-                window.handle_pcsc_event(event);
-            }
-        });
-    }
-
-    fn handle_pcsc_event(&self, event: PcscEvent) {
-        println!("UI: Handling event: {:?}", event);
-
-        match event {
-            PcscEvent::ReadersUpdated { readers } => {
-                self.apply_readers(readers);
-            }
-            PcscEvent::ReaderStatusUpdated {
-                reader_name,
-                card_present,
-            } => {
-                if card_present {
-                    self.imp()
-                        .reader_selector
-                        .set_reader_status_row_text("Card present");
-
-                    self.read_card_info(reader_name);
-                } else {
-                    self.imp()
-                        .reader_selector
-                        .set_reader_status_row_text("Card not present");
-                    self.imp().card_information.clear_ui();
-                }
-            }
-            PcscEvent::CardInfoUpdated { card } => match card {
-                Some(card) => self.apply_card_info(card),
-                None => self.imp().card_information.clear_ui(),
-            },
-            PcscEvent::Error { message } => {
-                eprintln!("PC/SC error: {message}");
-
-                self.imp().reader_selector.clear_ui();
-                self.imp().card_information.clear_ui();
-            }
-        }
-    }
-
-    fn watch_selected_reader(&self) {
-        println!("UI: watch_selected_readers");
-
-        let Some(reader_name) = self.imp().reader_selector.selected_reader() else {
-            self.stop_watching_reader();
-
-            self.imp().reader_selector.clear_ui();
-            self.imp().card_information.clear_ui();
+    pub(crate) fn setup_nfc_events(&self, app: &HexlyApplication) {
+        let Some(events_receiver) = app.nfc_events_receiver() else {
             return;
         };
 
-        let app = self.app();
-        let worker = app.pcsc_worker();
+        let window_weak = self.downgrade();
+        glib::MainContext::default().spawn_local(async move {
+            while let Ok(event) = events_receiver.recv().await {
+                let Some(window) = window_weak.upgrade() else {
+                    break;
+                };
 
-        if let Err(err) = worker
-            .sender()
-            .try_send(PcscCommand::WatchReader { reader_name })
-        {
-            eprintln!("Failed to send WatchReader command: {err}");
+                window.handle_nfc_event(event);
+            }
+        });
+
+        app.send_nfc_command(NfcCommand::Start);
+    }
+
+    // fn app(&self) -> Option<HexlyApplication> {
+    //     self.application()?.downcast::<HexlyApplication>().ok()
+    // }
+
+    fn init_state(&self) {
+        self.setup_ui_commands();
+
+        let state = AppState::default();
+
+        self.imp().state.replace(state.clone());
+        self.render(&state);
+    }
+
+    fn handle_nfc_event(&self, event: NfcEvent) {
+        match event {
+            NfcEvent::StateChanged(state) => {
+                self.append_event_log(&format!("NFC state: {:?}", state));
+            }
         }
     }
 
-    fn stop_watching_reader(&self) {
-        let app = self.app();
-        let worker = app.pcsc_worker();
-
-        let _ = worker.sender().try_send(PcscCommand::StopWatchingReader);
-    }
-
-    fn apply_readers(&self, readers: Vec<ReaderInfo>) {
-        println!("UI: apply_readers");
-        self.imp().reader_selector.set_readers(&readers);
-
-        if readers.is_empty() {
-            self.stop_watching_reader();
-
-            self.imp().reader_selector.clear_ui();
-            self.imp().card_information.clear_ui();
-
+    fn on_reader_selected(&self, selected: Option<u32>) {
+        let Some(index) = selected.map(|v| v as usize) else {
             return;
+        };
+
+        let mut state = self.imp().state.borrow().clone();
+        let readers = match &state {
+            AppState::ReadersAvailable { readers, .. } | AppState::CardPresent { readers, .. } => {
+                readers.clone()
+            }
+            _ => return,
+        };
+
+        let Some(reader) = readers.get(index) else {
+            return;
+        };
+
+        match &state {
+            AppState::ReadersAvailable {
+                selected_reader: Some(selected_reader),
+                ..
+            } if selected_reader == &reader.id => return,
+            AppState::CardPresent {
+                selected_reader, ..
+            } if selected_reader == &reader.id => return,
+            _ => {}
         }
 
-        self.watch_selected_reader();
+        state = match state {
+            AppState::ReadersAvailable {
+                readers,
+                reader_status,
+                ..
+            } => AppState::ReadersAvailable {
+                readers,
+                selected_reader: Some(reader.id.clone()),
+                reader_status,
+            },
+            AppState::CardPresent {
+                readers,
+                reader_status,
+                card,
+                ..
+            } => AppState::CardPresent {
+                readers,
+                selected_reader: reader.id.clone(),
+                reader_status,
+                card,
+            },
+            other => other,
+        };
+
+        self.imp().state.replace(state.clone());
+        self.render(&state);
+        self.append_event_log(&format!("Selected reader: {}", reader.label));
     }
 
-    fn read_card_info(&self, reader_name: String) {
-        let app = self.app();
-        let worker = app.pcsc_worker();
+    fn append_event_log(&self, line: &str) {
+        let buffer = self.imp().event_log_text_view.buffer();
+        let existing = buffer.text(&buffer.start_iter(), &buffer.end_iter(), false);
 
-        if let Err(err) = worker
-            .sender()
-            .try_send(PcscCommand::ReadCardInfo { reader_name })
-        {
-            eprintln!("Failed to send ReadCardInfo command: {err}");
+        let line = format!("[{}] {line}", now_hms());
+
+        if existing.is_empty() {
+            buffer.set_text(&line);
+        } else {
+            buffer.set_text(&format!("{existing}\n{line}"));
         }
     }
 
-    pub fn apply_card_info(&self, card: CardInfo) {
-        let uid = format_bytes(&card.uid, ByteFormat::Hex);
-        let atr = format_bytes(&card.atr, ByteFormat::Hex);
-        let kind = format_card_kind(&card.kind);
-        let capacity = format_capacity(card.capacity.as_ref());
-
-        let card_info = &self.imp().card_information;
-
-        card_info.set_uid(&uid);
-        card_info.set_atr(&atr);
-        card_info.set_card_type(&kind);
-        card_info.set_capacity(&capacity);
-        card_info.set_category_sensitive(true);
+    fn setup_ui_commands(&self) {
+        self.imp()
+            .reader_selector
+            .connect_reader_selected(glib::clone!(
+                #[weak(rename_to = window)]
+                self,
+                move |selected| {
+                    window.on_reader_selected(selected);
+                }
+            ));
     }
-    // #endregion
+
+    fn render(&self, state: &AppState) {
+        let imp = self.imp();
+
+        match state {
+            AppState::NoReaders { .. } => {
+                imp.reader_selector.clear();
+                imp.card_information.clear();
+                imp.card_contents_panel.show_no_reader();
+            }
+            AppState::ReadersAvailable {
+                readers,
+                selected_reader,
+                reader_status,
+                ..
+            } => {
+                let labels: Vec<String> = readers.iter().map(|r| r.label.clone()).collect();
+                let selected = selected_index(readers, selected_reader.as_ref()).map(|v| v as u32);
+                let formatted_status = format_reader_status(reader_status);
+
+                imp.reader_selector.set_readers(&labels, selected);
+                imp.reader_selector.set_reader_status(formatted_status);
+                imp.card_information.clear();
+                imp.card_contents_panel.show_no_card();
+            }
+            AppState::CardPresent {
+                readers,
+                selected_reader,
+                reader_status,
+                card,
+                ..
+            } => {
+                let labels: Vec<String> = readers.iter().map(|r| r.label.clone()).collect();
+                let selected = selected_index(readers, Some(selected_reader)).map(|v| v as u32);
+                let formatted_status = format_reader_status(reader_status);
+
+                imp.reader_selector.set_readers(&labels, selected);
+                imp.reader_selector.set_reader_status(formatted_status);
+
+                imp.card_information.set_card_info(
+                    card.uid.as_deref(),
+                    card.atr.as_deref(),
+                    format_card_type(card.card_type.as_ref()),
+                    card.capacity_bytes,
+                );
+                imp.card_contents_panel.show_card_data(card);
+            }
+        }
+    }
+}
+
+fn selected_index(readers: &[Reader], selected: Option<&ReaderId>) -> Option<usize> {
+    let selected = selected?;
+    readers.iter().position(|reader| &reader.id == selected)
+}
+
+fn now_hms() -> String {
+    glib::DateTime::now_local()
+        .ok()
+        .and_then(|dt| dt.format("%H:%M:%S").ok())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| "--:--:--".to_string())
 }

@@ -14,6 +14,18 @@ template $HexlyCardInformation: Adw.PreferencesGroup {
       "property",
       "monospace",
     ];
+
+    [suffix]
+    Button btn_copy_uid {
+      tooltip-text: _("Copy UID");
+      icon-name: "edit-copy-symbolic";
+      sensitive: false;
+      valign: center;
+
+      styles [
+        "flat",
+      ]
+    }
   }
 
   Adw.ActionRow card_atr_row {
@@ -59,3 +71,4 @@ template $HexlyCardInformation: Adw.PreferencesGroup {
     ];
   }
 }
+

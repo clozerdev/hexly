@@ -1,2 +1,2 @@
-pub mod common;
-pub mod settings;
+pub(crate) mod common;
+pub(crate) mod settings;

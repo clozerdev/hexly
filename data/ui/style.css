@@ -1,0 +1,109 @@
+.hexly-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1px;
+}
+
+row.hexly-editor-row .hexly-badge {
+  min-width: 92px;
+}
+
+.hexly-badge-placeholder {
+  opacity: 0.0;
+}
+
+.hexly-badge-manufacturer {
+  color: @error_color;
+  background-color: alpha(@error_color, 0.20);
+  border: 1px solid alpha(@error_color, 0.55);
+}
+
+.hexly-badge-trailer {
+  color: @warning_color;
+  background-color: alpha(@warning_color, 0.20);
+  border: 1px solid alpha(@warning_color, 0.55);
+}
+
+.hexly-badge-auth-success {
+  color: @success_color;
+  background-color: alpha(@success_color, 0.20);
+  border: 1px solid alpha(@success_color, 0.55);
+}
+
+.hexly-badge-auth-failed {
+  color: @error_color;
+  background-color: alpha(@error_color, 0.15);
+  border: 1px solid alpha(@error_color, 0.45);
+}
+
+row.hexly-row-manufacturer label.subtitle {
+  color: @error_color;
+}
+
+row.hexly-row-trailer label.subtitle {
+  color: @warning_color;
+}
+
+row.hexly-block-row label.subtitle {
+  font-family: monospace;
+}
+
+row.hexly-editor-changed {
+  background-color: alpha(@accent_bg_color, 0.12);
+  border: 1px solid alpha(@accent_bg_color, 0.35);
+  border-radius: 8px;
+}
+
+row.hexly-editor-row entry {
+  min-width: 520px;
+}
+
+.hexly-editor-value-box {
+  min-width: 660px;
+}
+
+row.hexly-editor-row entry.hexly-editor-entry:disabled {
+  opacity: 1.0;
+}
+
+row.hexly-warning-row {
+  background-color: alpha(@warning_color, 0.12);
+  border: 1px solid alpha(@warning_color, 0.45);
+  border-radius: 0 0 10px 10px;
+}
+
+row.hexly-warning-row label.title {
+  color: @warning_color;
+  font-weight: 600;
+}
+
+row.hexly-custom-keys-row button {
+  min-height: 24px;
+  min-width: 24px;
+  padding: 0;
+}
+
+row.hexly-custom-keys-row button image {
+  -gtk-icon-size: 14px;
+}
+
+viewswitcher.hexly-card-tabs button {
+  min-height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+viewswitcher.hexly-card-tabs button image,
+viewswitcher.hexly-card-tabs button label {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+viewswitcher.hexly-card-tabs button image {
+  margin-top: -1px;
+  margin-right: 2px;
+}

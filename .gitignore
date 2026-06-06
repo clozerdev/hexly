@@ -1,5 +1,6 @@
 # Build artifacts
 /install
 /target
+/docs
 
 src/config.rs

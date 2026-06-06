@@ -1,11 +1,10 @@
-#[rustfmt::skip]
-mod config;
-
 mod app;
 mod core;
 mod settings;
 mod ui;
-mod utils;
+
+#[rustfmt::skip]
+mod config;
 
 use gtk::prelude::*;
 use gtk::{gio, glib};

@@ -3,14 +3,14 @@ using Adw 1;
 
 template $HexlySettingsPageAuthentication: Adw.PreferencesPage {
   name: "card-authentication";
-  title: _("Card Authentication");
-  icon-name: "code-symbolic";
+  title: _("Authentication");
+  icon-name: "dialog-password-symbolic";
 
   Adw.PreferencesGroup {
     title: _("Card");
 
     Adw.SwitchRow {
-      title: _("Use default MIFARE authentication keys");
+      title: _("Use default authentication keys");
       action-name: "widget.default-auth-keys";
     }
   }

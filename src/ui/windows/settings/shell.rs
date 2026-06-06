@@ -3,7 +3,7 @@ use gtk::glib;
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 
-use crate::ui::windows::settings::pages::CardAuthentication;
+use crate::ui::windows::settings::pages;
 use crate::ui::windows::settings::pill::Pill;
 
 glib::wrapper! {
@@ -13,19 +13,17 @@ glib::wrapper! {
 }
 
 impl Shell {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         glib::Object::new()
     }
 
-    pub fn set_page(&self, page: &str) {
+    pub(crate) fn set_page(&self, page: &str) {
         let mut index = 0;
 
         while let Some(row) = self.imp().sidebar_box.row_at_index(index) {
-            let child = row.child().and_downcast::<Pill>().expect("Not a pill?");
-
+            let child = row.child().and_downcast::<Pill>().expect("Not a pill");
             if child.name() == page {
-                self.imp().sidebar_box.select_row(Some(&row));
-                self.imp().select_stack_page(&row);
+                row.activate();
                 return;
             }
 
@@ -37,10 +35,7 @@ impl Shell {
 mod imp {
     use super::*;
 
-    use glib::subclass::InitializingObject;
     use gtk::CompositeTemplate;
-
-    use crate::ui::windows::common::CommonShell;
 
     #[derive(Default, CompositeTemplate)]
     #[template(resource = "/dev/clozer/Hexly/ui/settings/shell.ui")]
@@ -75,7 +70,8 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             Pill::ensure_type();
-            CardAuthentication::ensure_type();
+
+            pages::CardAuthentication::ensure_type();
 
             klass.bind_template();
             klass.bind_template_callbacks();
@@ -87,7 +83,7 @@ mod imp {
             );
         }
 
-        fn instance_init(obj: &InitializingObject<Self>) {
+        fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
         }
     }
@@ -96,17 +92,9 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            self.add_page(
-                "card-authentication",
-                "Authentication",
-                "dialog-password-symbolic",
-                &CardAuthentication::new(),
-            );
-
-            if let Some(row) = self.sidebar_box.row_at_index(0) {
-                self.sidebar_box.select_row(Some(&row));
-                self.select_stack_page(&row);
-            }
+            self.init_content_view();
+            self.init_sidebar();
+            self.update_settings_page_title();
         }
     }
 
@@ -114,40 +102,61 @@ mod imp {
 
     impl BreakpointBinImpl for Shell {}
 
-    impl CommonShell for Shell {}
-
     #[gtk::template_callbacks]
     impl Shell {
         #[template_callback]
-        fn on_row_selected(&self, row: &gtk::ListBoxRow) {
-            self.select_stack_page(row);
-        }
-
-        pub(super) fn select_stack_page(&self, row: &gtk::ListBoxRow) {
-            let index = row.index() as u32;
-            let pages = self.settings_stack.pages();
-
-            if let Some(item) = pages.item(index)
-                && let Ok(page) = item.downcast::<adw::ViewStackPage>()
-            {
-                self.settings_stack.set_visible_child(&page.child());
+        fn on_row_selected(&self, row: Option<&gtk::ListBoxRow>) {
+            if let Some(pill) = row.and_then(|row| row.child()).and_downcast::<Pill>() {
+                let target = pill.name();
+                self.settings_stack.set_visible_child_name(&target);
+                self.split_view.set_show_content(true);
             }
-
-            self.split_view.set_show_content(true);
         }
 
-        fn add_page(&self, name: &str, title: &str, icon_name: &str, page: &impl IsA<gtk::Widget>) {
-            self.settings_stack.add_named(page, Some(name));
+        fn init_content_view(&self) {
+            let pages: Vec<adw::PreferencesPage> = vec![pages::CardAuthentication::new().upcast()];
 
-            let pill = glib::Object::builder::<Pill>()
-                .property("name", name)
-                .property("label", title)
-                .property("icon-name", icon_name)
-                .build();
+            for page in pages {
+                let name = page.name().map(|s| s.to_string());
+                let title = page.title();
+                let icon_name = page.icon_name().map(|s| s.to_string()).unwrap_or_default();
 
-            let row = gtk::ListBoxRow::new();
-            row.set_child(Some(&pill));
-            self.sidebar_box.append(&row);
+                self.settings_stack.add_titled_with_icon(
+                    &page,
+                    name.as_deref(),
+                    title.as_str(),
+                    icon_name.as_str(),
+                );
+            }
+        }
+
+        fn init_sidebar(&self) {
+            for page in self
+                .settings_stack
+                .pages()
+                .iter::<adw::ViewStackPage>()
+                .flatten()
+            {
+                let pill: Pill = glib::Object::builder()
+                    .property("icon-name", page.icon_name())
+                    .property("label", page.title())
+                    .property("name", page.name())
+                    .build();
+
+                let child = gtk::ListBoxRow::builder().child(&pill).build();
+                self.sidebar_box.append(&child);
+            }
+        }
+
+        fn update_settings_page_title(&self) {
+            let title = self
+                .settings_stack
+                .visible_child()
+                .map(|page| self.settings_stack.page(&page))
+                .and_then(|page| page.title())
+                .unwrap_or_default();
+
+            self.settings_page.set_title(title.as_str());
         }
     }
 }
