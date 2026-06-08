@@ -31,41 +31,47 @@ template $HexlyCardContentsPanel: Adw.Bin {
         name: "no-card";
 
         child: Adw.StatusPage {
-          title: _("No card detected");
-          description: _("Place a card on the selected reader.");
-          icon-name: "process-stop-symbolic";
-        };
-      }
-
-      Adw.ViewStackPage {
-        name: "card-detected";
-
-        child: Adw.StatusPage {
-          title: _("Card detected");
-          description: _("Read the card to inspect its contents.");
+          title: _("Waiting for a card...");
+          description: _("Place a card on the selected reader to inspect its contents.");
           icon-name: "auth-smartcard-symbolic";
 
           child: Gtk.Box {
             orientation: vertical;
-            spacing: 12;
+            spacing: 18;
+            width-request: 460;
             halign: center;
 
-            Gtk.Label detected_uid_label {
-              label: _("UID: -");
+            Adw.PreferencesGroup {
+              title: _("Ready to scan");
+              description: _("The selected reader is waiting for a contactless card.");
 
-              styles [
-                "monospace",
-                "title-4",
-              ]
+              Adw.ActionRow no_card_reader_row {
+                title: _("Reader");
+                subtitle: _("Selected reader");
+
+                css-classes: [
+                  "property",
+                ];
+              }
+
+              Adw.ActionRow no_card_hint_row {
+                title: _("Next step");
+                subtitle: _("Place a MIFARE card over the reader, then start a read operation.");
+
+                css-classes: [
+                  "property",
+                ];
+              }
             }
 
             Gtk.Button read_card_button {
+              hexpand: true;
+              halign: fill;
               label: _("Read card");
-              sensitive: false;
 
-              styles [
+              css-classes: [
                 "suggested-action",
-              ]
+              ];
             }
           };
         };
